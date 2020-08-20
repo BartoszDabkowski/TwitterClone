@@ -11,6 +11,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Twitter.Data;
 using Microsoft.EntityFrameworkCore;
+using Twitter.Data.Repositories;
+using Twitter.Domain.Repositories;
 
 namespace Twitter.Api
 {
@@ -31,6 +33,8 @@ namespace Twitter.Api
                 opt.UseSqlServer(Configuration.GetConnectionString("TwitterClone"))
                     .EnableSensitiveDataLogging()
                 );
+
+            services.AddScoped<IPostRepository, PostRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

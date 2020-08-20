@@ -10,7 +10,7 @@ using Twitter.Data;
 namespace Twitter.Data.Migrations
 {
     [DbContext(typeof(TwitterContext))]
-    [Migration("20200819145513_Initial")]
+    [Migration("20200819150219_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,9 +77,12 @@ namespace Twitter.Data.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });

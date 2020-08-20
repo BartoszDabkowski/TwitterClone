@@ -9,7 +9,7 @@ namespace Twitter.Domain.Repositories
     {
         IEnumerable<Post> GetPosts(int userId);
         Post GetPost(int userId, int postId);
-        void AddPost(int userId, int postId);
+        void AddPost(int userId, Post post);
         void UpdatePost(Post post);
         void DeletePost(Post post);
         bool Save();

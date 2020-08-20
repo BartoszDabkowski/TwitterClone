@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Twitter.Domain;
 using Twitter.Domain.Entities;
 using Twitter.Domain.Repositories;
 
@@ -17,32 +19,44 @@ namespace Twitter.Data.Repositories
 
         public IEnumerable<Post> GetPosts(int userId)
         {
-            throw new NotImplementedException();
+            return _context.Posts
+                .Where(x => x.UserId == userId);
         }
 
         public Post GetPost(int userId, int postId)
         {
-            throw new NotImplementedException();
+            return _context.Posts
+                .FirstOrDefault(x => x.UserId == userId && x.Id == postId);
         }
 
-        public void AddPost(int userId, int postId)
+        public void AddPost(int userId, Post post)
         {
-            throw new NotImplementedException();
+            if (post is null)
+                throw new ArgumentNullException(nameof(post));
+            
+            post.UserId = userId;
+            _context.Posts.Add(post);
         }
 
         public void UpdatePost(Post post)
         {
-            throw new NotImplementedException();
+            if (post is null)
+                throw new ArgumentNullException(nameof(post));
+
+            _context.Update(post);
         }
 
         public void DeletePost(Post post)
         {
-            throw new NotImplementedException();
+            if (post is null)
+                throw new ArgumentNullException(nameof(post));
+
+            _context.Remove(post);
         }
 
         public bool Save()
         {
-            throw new NotImplementedException();
+            return (_context.SaveChanges() >= 0);
         }
     }
 }

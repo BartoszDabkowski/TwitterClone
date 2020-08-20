@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Twitter.Domain;
 using Twitter.Domain.Entities;
 using Twitter.Domain.Joins;
 
@@ -18,6 +19,10 @@ namespace Twitter.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>()
+                .HasIndex(i => i.UserName)
+                .IsUnique();
+
             modelBuilder.Entity<UserFollowers>()
                 .HasKey(k => new { k.UserId, k.FollowerId });
 
