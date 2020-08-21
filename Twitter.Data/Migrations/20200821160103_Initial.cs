@@ -20,6 +20,30 @@ namespace Twitter.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Friendships",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(nullable: false),
+                    FriendId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Friendships", x => new { x.UserId, x.FriendId });
+                    table.ForeignKey(
+                        name: "FK_Friendships_Users_FriendId",
+                        column: x => x.FriendId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Friendships_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Posts",
                 columns: table => new
                 {
@@ -37,30 +61,6 @@ namespace Twitter.Data.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "UserFollowers",
-                columns: table => new
-                {
-                    UserId = table.Column<int>(nullable: false),
-                    FollowerId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UserFollowers", x => new { x.UserId, x.FollowerId });
-                    table.ForeignKey(
-                        name: "FK_UserFollowers_Users_FollowerId",
-                        column: x => x.FollowerId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_UserFollowers_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -91,6 +91,11 @@ namespace Twitter.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Friendships_FriendId",
+                table: "Friendships",
+                column: "FriendId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_UserId",
                 table: "Posts",
                 column: "UserId");
@@ -106,11 +111,6 @@ namespace Twitter.Data.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserFollowers_FollowerId",
-                table: "UserFollowers",
-                column: "FollowerId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Users_UserName",
                 table: "Users",
                 column: "UserName",
@@ -120,10 +120,10 @@ namespace Twitter.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Ratings");
+                name: "Friendships");
 
             migrationBuilder.DropTable(
-                name: "UserFollowers");
+                name: "Ratings");
 
             migrationBuilder.DropTable(
                 name: "Posts");

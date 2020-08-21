@@ -10,14 +10,14 @@ using Twitter.Data;
 namespace Twitter.Data.Migrations
 {
     [DbContext(typeof(TwitterContext))]
-    [Migration("20200819150219_Initial")]
+    [Migration("20200821160103_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.6")
+                .HasAnnotation("ProductVersion", "3.1.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -87,19 +87,19 @@ namespace Twitter.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Twitter.Domain.Joins.UserFollowers", b =>
+            modelBuilder.Entity("Twitter.Domain.Joins.Friendships", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("FollowerId")
+                    b.Property<int>("FriendId")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId", "FollowerId");
+                    b.HasKey("UserId", "FriendId");
 
-                    b.HasIndex("FollowerId");
+                    b.HasIndex("FriendId");
 
-                    b.ToTable("UserFollowers");
+                    b.ToTable("Friendships");
                 });
 
             modelBuilder.Entity("Twitter.Domain.Entities.Post", b =>
@@ -124,11 +124,11 @@ namespace Twitter.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Twitter.Domain.Joins.UserFollowers", b =>
+            modelBuilder.Entity("Twitter.Domain.Joins.Friendships", b =>
                 {
-                    b.HasOne("Twitter.Domain.Entities.User", "Follower")
-                        .WithMany("Following")
-                        .HasForeignKey("FollowerId")
+                    b.HasOne("Twitter.Domain.Entities.User", "Friend")
+                        .WithMany("Friends")
+                        .HasForeignKey("FriendId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

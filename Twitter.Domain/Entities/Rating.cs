@@ -18,5 +18,9 @@ namespace Twitter.Domain.Entities
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }
         public int UserId { get; set; }
+
+        [ForeignKey(nameof(PostId))]
+        public Post Post { get; set; }
+        public int PostId { get; set; }
     }
 }

@@ -12,8 +12,8 @@ namespace Twitter.Domain.Entities
         public User()
         {
             Posts = new List<Post>();
-            Following = new List<UserFollowers>();
-            Followers = new List<UserFollowers>();
+            Friends = new List<Friendships>();
+            Followers = new List<Friendships>();
         }
 
         [Key]
@@ -22,7 +22,7 @@ namespace Twitter.Domain.Entities
         [Required]
         public string UserName { get; set; }
         public List<Post> Posts { get; set; }
-        public List<UserFollowers> Following { get; set; }
-        public List<UserFollowers> Followers { get; set; }
+        public List<Friendships> Friends { get; set; }
+        public List<Friendships> Followers { get; set; }
     }
 }

@@ -1,18 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Twitter.Data;
 using Microsoft.EntityFrameworkCore;
 using Twitter.Data.Repositories;
 using Twitter.Domain.Repositories;
+using AutoMapper;
 
 namespace Twitter.Api
 {
@@ -34,7 +30,10 @@ namespace Twitter.Api
                     .EnableSensitiveDataLogging()
                 );
 
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

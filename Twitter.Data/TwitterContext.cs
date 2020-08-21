@@ -10,6 +10,7 @@ namespace Twitter.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Rating> Ratings { get; set; }
+        public DbSet<Friendships> Friendships { get; set; }
 
         public TwitterContext(DbContextOptions<TwitterContext> options)
         :base(options)
@@ -23,19 +24,19 @@ namespace Twitter.Data
                 .HasIndex(i => i.UserName)
                 .IsUnique();
 
-            modelBuilder.Entity<UserFollowers>()
-                .HasKey(k => new { k.UserId, k.FollowerId });
+            modelBuilder.Entity<Friendships>()
+                .HasKey(k => new { k.UserId, FollowerId = k.FriendId });
 
-            modelBuilder.Entity<UserFollowers>()
+            modelBuilder.Entity<Friendships>()
                 .HasOne(l => l.User)
                 .WithMany(a => a.Followers)
                 .HasForeignKey(l => l.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UserFollowers>()
-                .HasOne(l => l.Follower)
-                .WithMany(a => a.Following)
-                .HasForeignKey(l => l.FollowerId);
+            modelBuilder.Entity<Friendships>()
+                .HasOne(l => l.Friend)
+                .WithMany(a => a.Friends)
+                .HasForeignKey(l => l.FriendId);
         }
     }
 }

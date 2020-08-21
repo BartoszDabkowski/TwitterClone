@@ -8,6 +8,7 @@ namespace Twitter.Domain.Repositories
     public interface IPostRepository
     {
         IEnumerable<Post> GetPosts(int userId);
+        IEnumerable<Post> GetFriendsPosts(int userId);
         Post GetPost(int userId, int postId);
         void AddPost(int userId, Post post);
         void UpdatePost(Post post);

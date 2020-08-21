@@ -8,16 +8,16 @@ using Twitter.Domain.Entities;
 
 namespace Twitter.Domain.Joins
 {
-    public class UserFollowers
+    public class Friendships
     {
         [Key]
         public int UserId { get; set; }
 
         [Key]
-        public int FollowerId { get; set; }
+        public int FriendId { get; set; }
 
         public User User { get; set; }
-        public User Follower { get; set; }
+        public User Friend { get; set; }
 
     }
 }

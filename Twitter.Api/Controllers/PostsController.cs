@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Twitter.Data;
+using Twitter.Api.Models.Posts;
 using Twitter.Domain.Entities;
 using Twitter.Domain.Repositories;
 
@@ -16,17 +13,32 @@ namespace Twitter.Api.Controllers
     public class PostsController : ControllerBase
     {
         private readonly IPostRepository _postRepository;
+        private readonly IMapper _mapper;
 
-        public PostsController(IPostRepository postRepository)
+        public PostsController(
+            IPostRepository postRepository,
+            IMapper mapper)
         {
-            _postRepository = postRepository;
+            _postRepository = postRepository ?? throw new ArgumentNullException(nameof(_postRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         // GET: api/Users/{userId}/Posts
         [HttpGet]
-        public ActionResult<IEnumerable<Post>> GetPosts(int userId)
+        public ActionResult<IEnumerable<PostDto>> GetPosts(int userId)
         {
-            return Ok(_postRepository.GetPosts(userId));
+            var posts = _postRepository.GetPosts(userId);
+
+            return Ok(_mapper.Map<IEnumerable<Post>, IEnumerable<PostDto>>(posts));
+        }
+
+        // GET: api/Users/{userId}/Posts
+        [HttpGet]
+        public ActionResult<IEnumerable<PostDto>> GetFollowingPosts(int userId)
+        {
+            var posts = _postRepository.GetPosts(userId);
+
+            return Ok(_mapper.Map<IEnumerable<Post>, IEnumerable<PostDto>>(posts));
         }
 
         // GET: api/Users/{userId}/Posts/{postId}
@@ -40,7 +52,7 @@ namespace Twitter.Api.Controllers
                 return NotFound();
             }
 
-            return Ok(post);
+            return Ok(_mapper.Map<Post, PostDto>(post));
         }
 
         // PUT: api/Posts/5
@@ -79,12 +91,16 @@ namespace Twitter.Api.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost(Name = "AddPost")]
-        public ActionResult<Post> AddPost(int userId, Post post)
+        public ActionResult<Post> AddPost(int userId, PostForCreationDto postDto)
         {
+            var post = _mapper.Map<PostForCreationDto, Post>(postDto);
+
             _postRepository.AddPost(userId, post);
             _postRepository.Save();
 
-            return CreatedAtAction("GetPost", new { id = post.Id }, post);
+            var postToReturn = _mapper.Map<Post, PostDto>(post);
+
+            return CreatedAtAction("GetPost", new { userId, postId = post.Id }, postToReturn);
         }
 
         // GET: api/Users/{userId}/Posts/{postId}
@@ -92,6 +108,7 @@ namespace Twitter.Api.Controllers
         public ActionResult<Post> DeletePost(int userId, int postId)
         {
             var post = _postRepository.GetPost(userId, postId);
+
             if (post == null)
             {
                 return NotFound();

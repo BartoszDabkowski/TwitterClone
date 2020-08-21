@@ -3,23 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Twitter.Data;
+using Twitter.Api.Models.Users;
 using Twitter.Domain.Entities;
 using Twitter.Domain.Repositories;
 
 namespace Twitter.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users/{userId}/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class FollowersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public UsersController(
+        public FollowersController(
             IUserRepository userRepository,
             IMapper mapper)
         {
@@ -27,23 +25,13 @@ namespace Twitter.Api.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        // GET: api/Users
+        // GET: api/users/{userId}/followers
         [HttpGet]
-        public ActionResult<IEnumerable<User>> GetUsers()
+        public ActionResult<IEnumerable<UserDto>> GetFollowers(int userId)
         {
-            return Ok(_userRepository.GetUsers());
-        }
+            var followers = _userRepository.GetFollowers(userId);
 
-        // GET: api/Users/5
-        [HttpGet("{userId}")]
-        public ActionResult<User> GetUser(int userId)
-        {
-            var user = _userRepository.GetUser(userId);
-
-            if (user is null)
-                return NotFound();
-            
-            return Ok(user);
+            return Ok(_mapper.Map<IEnumerable<User>, IEnumerable<UserDto>>(followers));
         }
     }
 }

@@ -23,6 +23,20 @@ namespace Twitter.Data.Repositories
                 .Where(x => x.UserId == userId);
         }
 
+        public IEnumerable<Post> GetFriendsPosts(int userId)
+        {
+            return _context.Posts.Join(_context.Friendships,
+                post => post.Id,
+                user => user.FriendId,
+                (post, user) => new
+                {
+                    Post = post,
+                    User = user
+                })
+                .Where(x => x.User.FriendId == userId)
+                .Select(x => x.Post);
+        }
+
         public Post GetPost(int userId, int postId)
         {
             return _context.Posts
