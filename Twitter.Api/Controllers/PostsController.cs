@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using MoreLinq.Extensions;
+using Twitter.Api.Helpers;
 using Twitter.Api.Models.Posts;
+using Twitter.Api.Models.Shared;
 using Twitter.Domain.Entities;
 using Twitter.Domain.Repositories;
 
 namespace Twitter.Api.Controllers
 {
-    [Route("api/users/{userId}/posts")]
+    [Route("api/users/{userId}")]
     [ApiController]
     public class PostsController : ControllerBase
     {
@@ -24,74 +29,86 @@ namespace Twitter.Api.Controllers
         }
 
         // GET: api/Users/{userId}/Posts
-        [HttpGet]
-        public ActionResult<IEnumerable<PostDto>> GetPosts(int userId)
+        [HttpGet("posts")]
+        public ActionResult<PostCollectionDto> GetPosts(int userId)
         {
-            var posts = _postRepository.GetPosts(userId);
+            var postsFromRepo = _postRepository.GetPosts(userId);
 
-            return Ok(_mapper.Map<IEnumerable<Post>, IEnumerable<PostDto>>(posts));
+            var links = CreateLinksForPosts(postsFromRepo
+                .Select(x => x.UserId)
+                .Distinct());
+
+            var posts = _mapper
+                .Map<IEnumerable<Post>, IEnumerable<PostDto>>(postsFromRepo)
+                .ShapeData();
+
+            var linkedPostsToReturn = posts.Select(post =>
+            {
+                var postAsDictionary = post as IDictionary<string, object>;
+                var postLinks = CreateLinksForPost(userId, (int)postAsDictionary["Id"]);
+                postAsDictionary.Add("links", postLinks);
+                return postAsDictionary;
+            });
+
+            var linkedCollectionResource = new
+            {
+                value = linkedPostsToReturn,
+                links
+            };
+
+            return Ok(linkedCollectionResource);
         }
 
-        // GET: api/Users/{userId}/Posts
-        [HttpGet]
-        public ActionResult<IEnumerable<PostDto>> GetFollowingPosts(int userId)
+        // GET: api/Users/{userId}/Friends/-/Posts
+        [HttpGet("friends/-/posts")]
+        public ActionResult<PostCollectionDto> GetFriendsPosts(int userId)
         {
-            var posts = _postRepository.GetPosts(userId);
+            var postsFromRepo = _postRepository.GetFriendsPosts(userId);
 
-            return Ok(_mapper.Map<IEnumerable<Post>, IEnumerable<PostDto>>(posts));
+            var links = CreateLinksForPosts(postsFromRepo
+                .Select(x => x.UserId)
+                .Distinct());
+
+            var posts = _mapper
+                .Map<IEnumerable<Post>, IEnumerable<PostDto>>(postsFromRepo)
+                .ShapeData();
+
+            var linkedPostsToReturn = posts.Select(post =>
+            {
+                var postAsDictionary = post as IDictionary<string, object>;
+                var postLinks = CreateLinksForPost(userId, (int)postAsDictionary["Id"]);
+                postAsDictionary.Add("links", postLinks);
+                return postAsDictionary;
+            });
+
+            var linkedCollectionResource = new
+            {
+                value = linkedPostsToReturn,
+                links
+            };
+
+            return Ok(linkedCollectionResource);
         }
 
         // GET: api/Users/{userId}/Posts/{postId}
-        [HttpGet("{postId}", Name ="GetPost")]
-        public ActionResult<Post> GetPost(int userId, int postId)
+        [HttpGet("posts/{postId}", Name ="GetPost")]
+        public ActionResult<PostDto> GetPost(int userId, int postId)
         {
-            var post = _postRepository.GetPost(userId, postId);
+            var post = _postRepository.GetAllPost(userId, postId);
 
             if (post is null)
             {
                 return NotFound();
             }
 
-            return Ok(_mapper.Map<Post, PostDto>(post));
+            return Ok(_mapper.Map<IEnumerable<Post>, PostCollectionDto>(post));
         }
-
-        // PUT: api/Posts/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        //[HttpPut("{postId}", Name = "UpdatePost")]
-        //public async Task<IActionResult> PutPost(int postId, Post post)
-        //{
-        //    if (postId != post.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    //_context.Entry(post).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        //await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!PostExists(postId))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
 
         // GET: api/Users/{userId}/Posts
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        [HttpPost(Name = "AddPost")]
-        public ActionResult<Post> AddPost(int userId, PostForCreationDto postDto)
+        [HttpPost("posts", Name = "AddPost")]
+        public ActionResult AddPost(int userId, PostForCreationDto postDto)
         {
             var post = _mapper.Map<PostForCreationDto, Post>(postDto);
 
@@ -104,8 +121,8 @@ namespace Twitter.Api.Controllers
         }
 
         // GET: api/Users/{userId}/Posts/{postId}
-        [HttpDelete("{postId}")]
-        public ActionResult<Post> DeletePost(int userId, int postId)
+        [HttpDelete("posts/{postId}")]
+        public ActionResult DeletePost(int userId, int postId)
         {
             var post = _postRepository.GetPost(userId, postId);
 
@@ -119,5 +136,30 @@ namespace Twitter.Api.Controllers
 
             return NoContent();
         }
+
+        private IEnumerable<LinkDto> CreateLinksForPost(int userId, int postId)
+        {
+            var links = new List<LinkDto>();
+
+            links.Add(
+                new LinkDto(Url.Link("GetPost", new {userId, postId }),
+                    "self",
+                    "GET"));
+
+            return links;
+        }
+
+        private IEnumerable<LinkDto> CreateLinksForPosts(IEnumerable<int> userId)
+        {
+            var links = new List<LinkDto>();
+
+            links.Add(
+                new LinkDto(Url.Link("GetUsers", new { userId }),
+                    "users",
+                    "GET"));
+
+            return links;
+        }
+
     }
 }

@@ -12,7 +12,7 @@ namespace Twitter.Domain.Repositories
         void AddFriend(int userId, int friendUserId);
         void RemoveFriend(int userId, int friendUserId);
         IEnumerable<User> GetFollowers(int userId);
-        IEnumerable<User> GetUsers();
+        IEnumerable<User> GetUsers(IEnumerable<int> userId = null);
         User GetUser(int userId);
         void Save();
     }

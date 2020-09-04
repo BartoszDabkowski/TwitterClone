@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Twitter.Data.Repositories;
 using Twitter.Domain.Repositories;
 using AutoMapper;
+using Newtonsoft.Json;
 
 namespace Twitter.Api
 {
@@ -24,7 +25,18 @@ namespace Twitter.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowMyOrigin",
+                    builder => builder.WithOrigins("http://localhost:8080"));
+            });
+
+            services
+                .AddControllers()
+                .AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            }); ;
             services.AddDbContext<TwitterContext>(opt =>
                 opt.UseSqlServer(Configuration.GetConnectionString("TwitterClone"))
                     .EnableSensitiveDataLogging()
@@ -43,6 +55,8 @@ namespace Twitter.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseCors("AllowMyOrigin");
 
             app.UseRouting();
 

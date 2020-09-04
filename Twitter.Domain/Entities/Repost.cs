@@ -6,14 +6,10 @@ using System.Text;
 
 namespace Twitter.Domain.Entities
 {
-    public class Rating
+    public class Repost
     {
         [Key]
         public int Id { get; set; }
-
-        [Required]
-        [Range(1, 5)]
-        public int Value { get; set; }
 
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }
@@ -22,5 +18,8 @@ namespace Twitter.Domain.Entities
         [ForeignKey(nameof(PostId))]
         public Post Post { get; set; }
         public int PostId { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
     }
 }

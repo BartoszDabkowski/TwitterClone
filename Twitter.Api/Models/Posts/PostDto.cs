@@ -9,7 +9,11 @@ namespace Twitter.Api.Models.Posts
     {
         public int Id { get; set; }
         public string Text { get; set; }
-        public double Rating { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public int? InReplyToPostId { get; set; }
+        public int FavoriteCount { get; set; }
+        public int ResquawkCount { get; set; }
+        public int ReplyCount { get; set; }
         public int UserId { get; set; }
     }
 }

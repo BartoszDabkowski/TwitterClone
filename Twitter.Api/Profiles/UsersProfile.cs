@@ -12,7 +12,8 @@ namespace Twitter.Api.Profiles
     {
         public UsersProfile()
         {
-            CreateMap<User, UserDto>();
+            CreateMap<User, UserDto>()
+                .ForMember(d => d.FullName, s => s.MapFrom(s => $"{s.FirstName} {s.LastName}"));
 
             CreateMap<UserDto, User>();
 

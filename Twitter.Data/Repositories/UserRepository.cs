@@ -47,9 +47,12 @@ namespace Twitter.Data.Repositories
                 .Select(x => x.user);
         }
 
-        public IEnumerable<User> GetUsers()
+        public IEnumerable<User> GetUsers(IEnumerable<int> userIds = null)
         {
-            return _context.Users;
+            if (userIds is null)
+                return _context.Users;
+
+            return _context.Users.Where(x => userIds.Contains(x.Id));
         }
 
         public User GetUser(int userId)

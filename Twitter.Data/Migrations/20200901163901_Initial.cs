@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Twitter.Data.Migrations
 {
@@ -50,11 +51,19 @@ namespace Twitter.Data.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Text = table.Column<string>(maxLength: 280, nullable: false),
-                    UserId = table.Column<int>(nullable: false)
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    UserId = table.Column<int>(nullable: false),
+                    InReplyToPostId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Posts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Posts_Posts_InReplyToPostId",
+                        column: x => x.InReplyToPostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Posts_Users_UserId",
                         column: x => x.UserId,
@@ -64,31 +73,61 @@ namespace Twitter.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Ratings",
+                name: "Favorites",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(nullable: false),
+                    PostId = table.Column<int>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Favorites", x => new { x.UserId, x.PostId });
+                    table.ForeignKey(
+                        name: "FK_Favorites_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Favorites_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Repost",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Value = table.Column<int>(nullable: false),
                     UserId = table.Column<int>(nullable: false),
-                    PostId = table.Column<int>(nullable: true)
+                    PostId = table.Column<int>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Ratings", x => x.Id);
+                    table.PrimaryKey("PK_Repost", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Ratings_Posts_PostId",
+                        name: "FK_Repost_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Ratings_Users_UserId",
+                        name: "FK_Repost_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Favorites_PostId",
+                table: "Favorites",
+                column: "PostId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Friendships_FriendId",
@@ -96,18 +135,23 @@ namespace Twitter.Data.Migrations
                 column: "FriendId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Posts_InReplyToPostId",
+                table: "Posts",
+                column: "InReplyToPostId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_UserId",
                 table: "Posts",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ratings_PostId",
-                table: "Ratings",
+                name: "IX_Repost_PostId",
+                table: "Repost",
                 column: "PostId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ratings_UserId",
-                table: "Ratings",
+                name: "IX_Repost_UserId",
+                table: "Repost",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -120,10 +164,13 @@ namespace Twitter.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Favorites");
+
+            migrationBuilder.DropTable(
                 name: "Friendships");
 
             migrationBuilder.DropTable(
-                name: "Ratings");
+                name: "Repost");
 
             migrationBuilder.DropTable(
                 name: "Posts");

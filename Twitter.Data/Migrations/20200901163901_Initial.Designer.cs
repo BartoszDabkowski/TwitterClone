@@ -10,7 +10,7 @@ using Twitter.Data;
 namespace Twitter.Data.Migrations
 {
     [DbContext(typeof(TwitterContext))]
-    [Migration("20200821160103_Initial")]
+    [Migration("20200901163901_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,6 +28,12 @@ namespace Twitter.Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("InReplyToPostId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(280)")
@@ -38,25 +44,27 @@ namespace Twitter.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InReplyToPostId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Posts");
                 });
 
-            modelBuilder.Entity("Twitter.Domain.Entities.Rating", b =>
+            modelBuilder.Entity("Twitter.Domain.Entities.Repost", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("PostId")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PostId")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Value")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -65,7 +73,7 @@ namespace Twitter.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Ratings");
+                    b.ToTable("Repost");
                 });
 
             modelBuilder.Entity("Twitter.Domain.Entities.User", b =>
@@ -87,6 +95,24 @@ namespace Twitter.Data.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Twitter.Domain.Joins.Favorite", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "PostId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("Favorites");
+                });
+
             modelBuilder.Entity("Twitter.Domain.Joins.Friendships", b =>
                 {
                     b.Property<int>("UserId")
@@ -104,6 +130,10 @@ namespace Twitter.Data.Migrations
 
             modelBuilder.Entity("Twitter.Domain.Entities.Post", b =>
                 {
+                    b.HasOne("Twitter.Domain.Entities.Post", "InReplyToPost")
+                        .WithMany()
+                        .HasForeignKey("InReplyToPostId");
+
                     b.HasOne("Twitter.Domain.Entities.User", "User")
                         .WithMany("Posts")
                         .HasForeignKey("UserId")
@@ -111,16 +141,33 @@ namespace Twitter.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Twitter.Domain.Entities.Rating", b =>
+            modelBuilder.Entity("Twitter.Domain.Entities.Repost", b =>
                 {
-                    b.HasOne("Twitter.Domain.Entities.Post", null)
-                        .WithMany("Ratings")
-                        .HasForeignKey("PostId");
+                    b.HasOne("Twitter.Domain.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Twitter.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("Reposts")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Twitter.Domain.Joins.Favorite", b =>
+                {
+                    b.HasOne("Twitter.Domain.Entities.Post", "Post")
+                        .WithMany("Favorites")
+                        .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Twitter.Domain.Entities.User", "User")
+                        .WithMany("Favorites")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

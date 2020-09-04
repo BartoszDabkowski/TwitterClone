@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Twitter.Domain;
 using Twitter.Domain.Entities;
 using Twitter.Domain.Repositories;
@@ -20,26 +21,75 @@ namespace Twitter.Data.Repositories
         public IEnumerable<Post> GetPosts(int userId)
         {
             return _context.Posts
+                .Include(x => x.User)
+                .Include(x => x.Favorites)
+                .Include(x => x.Reposts)
+                .Include(x => x.Replies)
+                .AsNoTracking()
                 .Where(x => x.UserId == userId);
         }
 
         public IEnumerable<Post> GetFriendsPosts(int userId)
         {
-            return _context.Posts.Join(_context.Friendships,
-                post => post.Id,
-                user => user.FriendId,
-                (post, user) => new
-                {
-                    Post = post,
-                    User = user
-                })
-                .Where(x => x.User.FriendId == userId)
-                .Select(x => x.Post);
+            var usersFriends = _context.Users.Join(_context.Friendships,
+                    user => user.Id,
+                    friendships => friendships.UserId,
+                    (user, friendships) => new
+                    {
+                        User = user,
+                        Friendships = friendships
+                    })
+                .Where(x => x.Friendships.UserId == userId);
+
+            return _context.Posts.Join(usersFriends,
+                post => post.UserId,
+                usersFriend => usersFriend.Friendships.FriendId,
+                (posts, usersFriend) => posts)
+                .Include(x => x.User)
+                .Include(x => x.Favorites)
+                .Include(x => x.Reposts)
+                .Include(x => x.Replies);
+        }
+
+        public IEnumerable<Post> GetAllPost(int userId, int postId)
+        {
+            var post =  _context.Posts
+                .Include(x => x.User)
+                .Include(x => x.Favorites)
+                .Include(x => x.Reposts)
+                .Include(x => x.Replies)
+                .Include(x => x.InReplyToPost).ThenInclude(x => x.User)
+                .Include(x => x.InReplyToPost).ThenInclude(x => x.InReplyToPost)
+                .SingleOrDefault(x => x.UserId == userId && x.Id == postId);
+
+            var posts = new List<Post>{post};
+
+            var p = post;
+            while (p != null && p.InReplyToPostId.HasValue)
+            {
+                var p2 = _context.Posts
+                    .Include(x => x.User)
+                    .Include(x => x.Favorites)
+                    .Include(x => x.Reposts)
+                    .Include(x => x.Replies)
+                    .Include(x => x.InReplyToPost).ThenInclude(x => x.User)
+                    .Include(x => x.InReplyToPost).ThenInclude(x => x.InReplyToPost)
+                    .SingleOrDefault(x => x.Id == p.InReplyToPostId);
+
+                posts.Add(p2);
+                p = p2;
+            }
+
+            return posts;
         }
 
         public Post GetPost(int userId, int postId)
         {
             return _context.Posts
+                .Include(x => x.User)
+                .Include(x => x.Favorites)
+                .Include(x => x.Reposts)
+                .Include(x => x.Replies)
                 .FirstOrDefault(x => x.UserId == userId && x.Id == postId);
         }
 
