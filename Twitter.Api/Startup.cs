@@ -10,6 +10,7 @@ using Twitter.Data.Repositories;
 using Twitter.Domain.Repositories;
 using AutoMapper;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Twitter.Api
 {
@@ -36,6 +37,8 @@ namespace Twitter.Api
                 .AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                options.SerializerSettings.ContractResolver =
+                    new CamelCasePropertyNamesContractResolver();
             }); ;
             services.AddDbContext<TwitterContext>(opt =>
                 opt.UseSqlServer(Configuration.GetConnectionString("TwitterClone"))

@@ -32,9 +32,9 @@ namespace Twitter.Api.Controllers
 
         // GET: api/Users
         [HttpGet(Name = "GetUsers")]
-        public ActionResult<IEnumerable<User>> GetUsers([FromQuery] int[] userId = null)
+        public ActionResult<IEnumerable<User>> GetUsers([FromQuery] string[] userName = null)
         {
-            var usersFromRepo = _userRepository.GetUsers(userId);
+            var usersFromRepo = _userRepository.GetUsers(userName);
 
             var users = _mapper
                 .Map<IEnumerable<User>, IEnumerable<UserDto>>(usersFromRepo)
@@ -43,7 +43,7 @@ namespace Twitter.Api.Controllers
             var linkedUsersToReturn = users.Select(user =>
             {
                 var userAsDictionary = user as IDictionary<string, object>;
-                var userLinks = CreateLinksForUser((int)userAsDictionary["Id"]);
+                var userLinks = CreateLinksForUser((string)userAsDictionary["UserName"]);
                 userAsDictionary.Add("links", userLinks);
                 return userAsDictionary;
             });
@@ -52,10 +52,10 @@ namespace Twitter.Api.Controllers
         }
 
         // GET: api/Users/5
-        [HttpGet("{userId}", Name = "GetUser")]
-        public ActionResult<User> GetUser(int userId)
+        [HttpGet("{userName}", Name = "GetUser")]
+        public ActionResult<User> GetUser(string userName)
         {
-            var userFromRepo = _userRepository.GetUser(userId);
+            var userFromRepo = _userRepository.GetUser(userName);
 
             if (userFromRepo is null)
                 return NotFound();
@@ -65,18 +65,18 @@ namespace Twitter.Api.Controllers
                 .ShapeData()
                 as IDictionary<string, object>;
 
-            var userLinks = CreateLinksForUser(userFromRepo.Id);
+            var userLinks = CreateLinksForUser(userFromRepo.UserName);
             user.Add("links", userLinks);
 
             return Ok(user);
         }
 
-        private IEnumerable<LinkDto> CreateLinksForUser(int userId)
+        private IEnumerable<LinkDto> CreateLinksForUser(string userName)
         {
             var links = new List<LinkDto>();
 
             links.Add(
-                new LinkDto(Url.Link("GetUser", new { userId }),
+                new LinkDto(Url.Link("GetUser", new { userName }),
                     "self",
                     "GET"));
 

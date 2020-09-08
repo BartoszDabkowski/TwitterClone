@@ -7,9 +7,9 @@ using Twitter.Domain.Entities;
 
 namespace Twitter.Api.Models.Posts
 {
-    public class PostCollectionDto
-    {
-        public IEnumerable<PostDto> Posts { get; set; }
-        public IEnumerable<UserDto> Users { get; set; }
-    }
+    //public class PostCollectionDto
+    //{
+    //    public IEnumerable<PostDto> Posts { get; set; }
+    //    public IEnumerable<UserDto> Users { get; set; }
+    //}
 }

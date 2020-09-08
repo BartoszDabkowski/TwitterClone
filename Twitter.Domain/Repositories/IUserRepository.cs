@@ -8,12 +8,12 @@ namespace Twitter.Domain.Repositories
 {
     public interface IUserRepository
     {
-        IEnumerable<User> GetFriends(int userId);
-        void AddFriend(int userId, int friendUserId);
-        void RemoveFriend(int userId, int friendUserId);
-        IEnumerable<User> GetFollowers(int userId);
-        IEnumerable<User> GetUsers(IEnumerable<int> userId = null);
-        User GetUser(int userId);
+        IEnumerable<User> GetFriends(string userName);
+        void AddFriend(string userName, string friendUserName);
+        void RemoveFriend(string userName, string friendUserName);
+        IEnumerable<User> GetFollowers(string userName);
+        IEnumerable<User> GetUsers(IEnumerable<string> userName = null);
+        User GetUser(string userName);
         void Save();
     }
 }

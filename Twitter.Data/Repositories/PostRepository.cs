@@ -18,19 +18,23 @@ namespace Twitter.Data.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public IEnumerable<Post> GetPosts(int userId)
+        public IEnumerable<Post> GetPosts(string userName)
         {
+            var userId = _context.Users.SingleOrDefault(x => x.UserName.Equals(userName))?.Id;
+
             return _context.Posts
                 .Include(x => x.User)
                 .Include(x => x.Favorites)
                 .Include(x => x.Reposts)
                 .Include(x => x.Replies)
                 .AsNoTracking()
-                .Where(x => x.UserId == userId);
+                .Where(x => x.User.Id == userId);
         }
 
-        public IEnumerable<Post> GetFriendsPosts(int userId)
+        public IEnumerable<Post> GetFriendsPosts(string userName)
         {
+            var userId = _context.Users.SingleOrDefault(x => x.UserName.Equals(userName))?.Id;
+
             var usersFriends = _context.Users.Join(_context.Friendships,
                     user => user.Id,
                     friendships => friendships.UserId,
@@ -51,8 +55,10 @@ namespace Twitter.Data.Repositories
                 .Include(x => x.Replies);
         }
 
-        public IEnumerable<Post> GetAllPost(int userId, int postId)
+        public IEnumerable<Post> GetAllPost(string userName, int postId)
         {
+            var userId = _context.Users.SingleOrDefault(x => x.UserName.Equals(userName))?.Id;
+
             var post =  _context.Posts
                 .Include(x => x.User)
                 .Include(x => x.Favorites)
@@ -61,6 +67,9 @@ namespace Twitter.Data.Repositories
                 .Include(x => x.InReplyToPost).ThenInclude(x => x.User)
                 .Include(x => x.InReplyToPost).ThenInclude(x => x.InReplyToPost)
                 .SingleOrDefault(x => x.UserId == userId && x.Id == postId);
+
+            if (post is null)
+                return null;
 
             var posts = new List<Post>{post};
 
@@ -83,8 +92,10 @@ namespace Twitter.Data.Repositories
             return posts;
         }
 
-        public Post GetPost(int userId, int postId)
+        public Post GetPost(string userName, int postId)
         {
+            var userId = _context.Users.SingleOrDefault(x => x.UserName.Equals(userName))?.Id;
+
             return _context.Posts
                 .Include(x => x.User)
                 .Include(x => x.Favorites)
@@ -93,12 +104,17 @@ namespace Twitter.Data.Repositories
                 .FirstOrDefault(x => x.UserId == userId && x.Id == postId);
         }
 
-        public void AddPost(int userId, Post post)
+        public void AddPost(string userName, Post post)
         {
             if (post is null)
                 throw new ArgumentNullException(nameof(post));
-            
-            post.UserId = userId;
+
+            var userId = _context.Users.SingleOrDefault(x => x.UserName.Equals(userName))?.Id;
+
+            if (userId is null)
+                throw new ArgumentException(nameof(userName));
+
+            post.UserId = userId.Value;
             _context.Posts.Add(post);
         }
 

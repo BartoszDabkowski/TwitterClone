@@ -13,7 +13,7 @@ using Twitter.Domain.Repositories;
 
 namespace Twitter.Api.Controllers
 {
-    [Route("api/users/{userId}")]
+    [Route("api/users/{userName}")]
     [ApiController]
     public class PostsController : ControllerBase
     {
@@ -28,14 +28,14 @@ namespace Twitter.Api.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        // GET: api/Users/{userId}/Posts
+        // GET: api/Users/{userName}/Posts
         [HttpGet("posts")]
-        public ActionResult<PostCollectionDto> GetPosts(int userId)
+        public ActionResult<PostDto> GetPosts(string userName)
         {
-            var postsFromRepo = _postRepository.GetPosts(userId);
+            var postsFromRepo = _postRepository.GetPosts(userName);
 
             var links = CreateLinksForPosts(postsFromRepo
-                .Select(x => x.UserId)
+                .Select(x => x.User.UserName)
                 .Distinct());
 
             var posts = _mapper
@@ -45,7 +45,7 @@ namespace Twitter.Api.Controllers
             var linkedPostsToReturn = posts.Select(post =>
             {
                 var postAsDictionary = post as IDictionary<string, object>;
-                var postLinks = CreateLinksForPost(userId, (int)postAsDictionary["Id"]);
+                var postLinks = CreateLinksForPost(userName, (int)postAsDictionary["Id"]);
                 postAsDictionary.Add("links", postLinks);
                 return postAsDictionary;
             });
@@ -59,14 +59,14 @@ namespace Twitter.Api.Controllers
             return Ok(linkedCollectionResource);
         }
 
-        // GET: api/Users/{userId}/Friends/-/Posts
+        // GET: api/Users/{userName}/Friends/-/Posts
         [HttpGet("friends/-/posts")]
-        public ActionResult<PostCollectionDto> GetFriendsPosts(int userId)
+        public ActionResult<PostDto> GetFriendsPosts(string userName)
         {
-            var postsFromRepo = _postRepository.GetFriendsPosts(userId);
+            var postsFromRepo = _postRepository.GetFriendsPosts(userName);
 
             var links = CreateLinksForPosts(postsFromRepo
-                .Select(x => x.UserId)
+                .Select(x => x.User.UserName)
                 .Distinct());
 
             var posts = _mapper
@@ -76,7 +76,7 @@ namespace Twitter.Api.Controllers
             var linkedPostsToReturn = posts.Select(post =>
             {
                 var postAsDictionary = post as IDictionary<string, object>;
-                var postLinks = CreateLinksForPost(userId, (int)postAsDictionary["Id"]);
+                var postLinks = CreateLinksForPost(userName, (int)postAsDictionary["Id"]);
                 postAsDictionary.Add("links", postLinks);
                 return postAsDictionary;
             });
@@ -90,41 +90,63 @@ namespace Twitter.Api.Controllers
             return Ok(linkedCollectionResource);
         }
 
-        // GET: api/Users/{userId}/Posts/{postId}
+        // GET: api/Users/{userName}/Posts/{postId}
         [HttpGet("posts/{postId}", Name ="GetPost")]
-        public ActionResult<PostDto> GetPost(int userId, int postId)
+        public ActionResult<IEnumerable<PostDto>> GetPost(string userName, int postId)
         {
-            var post = _postRepository.GetAllPost(userId, postId);
+            var postsFromRepo = _postRepository.GetAllPost(userName, postId);
 
-            if (post is null)
+            if (postsFromRepo is null)
             {
                 return NotFound();
             }
 
-            return Ok(_mapper.Map<IEnumerable<Post>, PostCollectionDto>(post));
+            var links = CreateLinksForPosts(postsFromRepo
+                .Select(x => x.User.UserName)
+                .Distinct());
+
+            var posts = _mapper
+                .Map<IEnumerable<Post>, IEnumerable<PostDto>>(postsFromRepo)
+                .ShapeData();
+
+            var linkedPostsToReturn = posts.Select(post =>
+            {
+                var postAsDictionary = post as IDictionary<string, object>;
+                var postLinks = CreateLinksForPost(userName, (int)postAsDictionary["Id"]);
+                postAsDictionary.Add("links", postLinks);
+                return postAsDictionary;
+            });
+
+            var linkedCollectionResource = new
+            {
+                value = linkedPostsToReturn,
+                links
+            };
+
+            return Ok(linkedCollectionResource);
         }
 
-        // GET: api/Users/{userId}/Posts
+        // GET: api/Users/{userName}/Posts
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost("posts", Name = "AddPost")]
-        public ActionResult AddPost(int userId, PostForCreationDto postDto)
+        public ActionResult AddPost(string userName, PostForCreationDto postDto)
         {
             var post = _mapper.Map<PostForCreationDto, Post>(postDto);
 
-            _postRepository.AddPost(userId, post);
+            _postRepository.AddPost(userName, post);
             _postRepository.Save();
 
             var postToReturn = _mapper.Map<Post, PostDto>(post);
 
-            return CreatedAtAction("GetPost", new { userId, postId = post.Id }, postToReturn);
+            return CreatedAtAction("GetPost", new { userName, postId = post.Id }, postToReturn);
         }
 
-        // GET: api/Users/{userId}/Posts/{postId}
+        // GET: api/Users/{userName}/Posts/{postId}
         [HttpDelete("posts/{postId}")]
-        public ActionResult DeletePost(int userId, int postId)
+        public ActionResult DeletePost(string userName, int postId)
         {
-            var post = _postRepository.GetPost(userId, postId);
+            var post = _postRepository.GetPost(userName, postId);
 
             if (post == null)
             {
@@ -137,24 +159,24 @@ namespace Twitter.Api.Controllers
             return NoContent();
         }
 
-        private IEnumerable<LinkDto> CreateLinksForPost(int userId, int postId)
+        private IEnumerable<LinkDto> CreateLinksForPost(string userName, int postId)
         {
             var links = new List<LinkDto>();
 
             links.Add(
-                new LinkDto(Url.Link("GetPost", new {userId, postId }),
+                new LinkDto(Url.Link("GetPost", new { userName = userName, postId }),
                     "self",
                     "GET"));
 
             return links;
         }
 
-        private IEnumerable<LinkDto> CreateLinksForPosts(IEnumerable<int> userId)
+        private IEnumerable<LinkDto> CreateLinksForPosts(IEnumerable<string> userName)
         {
             var links = new List<LinkDto>();
 
             links.Add(
-                new LinkDto(Url.Link("GetUsers", new { userId }),
+                new LinkDto(Url.Link("GetUsers", new { userName }),
                     "users",
                     "GET"));
 

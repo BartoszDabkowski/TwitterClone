@@ -27,18 +27,18 @@ namespace Twitter.Api.Controllers
 
         // GET: api/users/{userId}/friends
         [HttpGet]
-        public ActionResult<IEnumerable<UserDto>> GetFriends(int userId)
+        public ActionResult<IEnumerable<UserDto>> GetFriends(string userName)
         {
-            var friends = _userRepository.GetFriends(userId);
+            var friends = _userRepository.GetFriends(userName);
 
             return Ok(_mapper.Map<IEnumerable<User>, IEnumerable<UserDto>>(friends));
         }
 
         // GET: api/users/{userId}/friends
         [HttpPost]
-        public ActionResult AddFriend(int userId, [FromBody] int friendUserId)
+        public ActionResult AddFriend(string userName, [FromBody] string friendUserName)
         {
-            _userRepository.AddFriend(userId, friendUserId);
+            _userRepository.AddFriend(userName, friendUserName);
             _userRepository.Save();
 
             return NoContent();
@@ -46,9 +46,9 @@ namespace Twitter.Api.Controllers
 
         // GET: api/users/{userId}/friends
         [HttpDelete]
-        public ActionResult RemoveFriend(int userId, [FromBody] int friendUserId)
+        public ActionResult RemoveFriend(string userName, [FromBody] string friendUserName)
         {
-            _userRepository.RemoveFriend(userId, friendUserId);
+            _userRepository.RemoveFriend(userName, friendUserName);
             _userRepository.Save();
 
             return NoContent();

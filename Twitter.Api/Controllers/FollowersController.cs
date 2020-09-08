@@ -27,9 +27,9 @@ namespace Twitter.Api.Controllers
 
         // GET: api/users/{userId}/followers
         [HttpGet]
-        public ActionResult<IEnumerable<UserDto>> GetFollowers(int userId)
+        public ActionResult<IEnumerable<UserDto>> GetFollowers(string userName)
         {
-            var followers = _userRepository.GetFollowers(userId);
+            var followers = _userRepository.GetFollowers(userName);
 
             return Ok(_mapper.Map<IEnumerable<User>, IEnumerable<UserDto>>(followers));
         }
